@@ -1,0 +1,4 @@
+jvmobjects
+==========
+
+JVM objects research
