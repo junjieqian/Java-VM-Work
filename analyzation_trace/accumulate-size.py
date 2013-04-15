@@ -92,7 +92,7 @@ def calculation(filename):
 	return targetlist, intersizelist
 
 def savefile(filename, list1, list2):
-	fp = open(filename, 'r')
+	fp = open(filename, 'w')
 	fp.write("Object list: \n")
 	for element in list1:
 		print >> fp, element
