@@ -1,0 +1,182 @@
+diff -Naur jikesrvm-3.1.3/MMTk/ext/vm/jikesrvm/org/jikesrvm/mm/mmtk/ObjectModel.java jikesrvm-3.1.3-barriers/MMTk/ext/vm/jikesrvm/org/jikesrvm/mm/mmtk/ObjectModel.java
+--- jikesrvm-3.1.3/MMTk/ext/vm/jikesrvm/org/jikesrvm/mm/mmtk/ObjectModel.java	2013-02-12 12:28:43.000000000 -0600
++++ jikesrvm-3.1.3-barriers/MMTk/ext/vm/jikesrvm/org/jikesrvm/mm/mmtk/ObjectModel.java	2013-04-16 11:08:22.028961250 -0500
+@@ -90,7 +90,7 @@
+    * @param object The object whose size is being queried
+    * @return The size (in bytes) of the given object.
+    */
+-  static int getObjectSize(ObjectReference object) {
++  public static int getObjectSize(ObjectReference object) {
+     TIB tib = org.jikesrvm.objectmodel.ObjectModel.getTIB(object);
+     RVMType type = Magic.objectAsType(tib.getType());
+ 
+diff -Naur jikesrvm-3.1.3/MMTk/src/org/mmtk/plan/marksweep/MSConstraints.java jikesrvm-3.1.3-barriers/MMTk/src/org/mmtk/plan/marksweep/MSConstraints.java
+--- jikesrvm-3.1.3/MMTk/src/org/mmtk/plan/marksweep/MSConstraints.java	2013-02-12 12:28:44.000000000 -0600
++++ jikesrvm-3.1.3-barriers/MMTk/src/org/mmtk/plan/marksweep/MSConstraints.java	2013-04-16 11:08:20.568942352 -0500
+@@ -35,4 +35,12 @@
+   public int maxNonLOSDefaultAllocBytes() { return SegregatedFreeListSpace.MAX_FREELIST_OBJECT_BYTES; }
+   @Override
+   public int numSpecializedScans() { return 1; }
++
++  /* Barriers implementation
++   * Junjie Qian
++   */
++  @Override
++  public boolean needsObjectReferenceReadBarrier() { return true; }
++  @Override
++  public boolean needsObjectReferenceWriteBarrier() { return true; }
+ }
+diff -Naur jikesrvm-3.1.3/MMTk/src/org/mmtk/plan/marksweep/MSMutator.java jikesrvm-3.1.3-barriers/MMTk/src/org/mmtk/plan/marksweep/MSMutator.java
+--- jikesrvm-3.1.3/MMTk/src/org/mmtk/plan/marksweep/MSMutator.java	2013-02-12 12:28:44.000000000 -0600
++++ jikesrvm-3.1.3-barriers/MMTk/src/org/mmtk/plan/marksweep/MSMutator.java	2013-04-16 11:08:20.576942455 -0500
+@@ -20,6 +20,9 @@
+ import org.vmmagic.pragma.*;
+ import org.vmmagic.unboxed.*;
+ 
++// Junjie Qian
++import org.mmtk.vm.VM;
++
+ /**
+  * This class implements <i>per-mutator thread</i> behavior
+  * and state for the <i>MS</i> plan, which implements a full-heap
+@@ -88,6 +91,28 @@
+     return super.getAllocatorFromSpace(space);
+   }
+ 
++  /***************************************************************************
++   * Barriers implementation
++   * Junjie Qian
++   */
++  @Override
++  @Inline
++  public ObjectReference objectReferenceRead(ObjectReference src, Address slot, Word metaDataA, Word metaDataB, int mode) {
++    return VM.barriers.objectReferenceRead(src, metaDataA, metaDataB, mode);
++  }
++
++  @Override
++  @Inline
++  public void objectReferenceWrite(ObjectReference src, Address slot, ObjectReference tgt, Word metaDataA, Word metaDataB, int mode) {
++    VM.barriers.objectReferenceWrite(src, tgt, metaDataA, metaDataB, mode);
++  }
++
++  @Override
++  @Inline
++  public boolean objectReferenceTryCompareAndSwap(ObjectReference src, Address slot, ObjectReference old, ObjectReference tgt, Word metaDataA, Word metaDataB, int mode) {
++    return VM.barriers.objectReferenceTryCompareAndSwap(src, old, tgt, metaDataA, metaDataB, mode);
++  }
++
+ 
+   /****************************************************************************
+    * Collection
+diff -Naur jikesrvm-3.1.3/rvm/src/org/jikesrvm/mm/mminterface/Barriers.java jikesrvm-3.1.3-barriers/rvm/src/org/jikesrvm/mm/mminterface/Barriers.java
+--- jikesrvm-3.1.3/rvm/src/org/jikesrvm/mm/mminterface/Barriers.java	2013-02-12 12:28:50.000000000 -0600
++++ jikesrvm-3.1.3-barriers/rvm/src/org/jikesrvm/mm/mminterface/Barriers.java	2013-04-16 11:09:03.705500691 -0500
+@@ -24,6 +24,9 @@
+ import org.vmmagic.unboxed.Offset;
+ import org.vmmagic.unboxed.Word;
+ 
++import org.jikesrvm.mm.mmtk.ObjectModel;
++import org.vmmagic.pragma.*;
++
+ @Uninterruptible
+ public class Barriers implements org.mmtk.utility.Constants {
+   /** {@code true} if the selected plan requires a read barrier on java.lang.ref.Reference types */
+@@ -1226,11 +1229,28 @@
+   public static void objectFieldWrite(Object ref, Object value, Offset offset, int locationMetadata) {
+     if (NEEDS_OBJECT_GC_WRITE_BARRIER) {
+       ObjectReference src = ObjectReference.fromObject(ref);
++
++      // Junjie Qian
++      int size = org.jikesrvm.mm.mmtk.ObjectModel.getObjectSize(src);
++      dowritebarrier(size, src, offset);
++
+       Selected.Mutator.get().objectReferenceWrite(src, src.toAddress().plus(offset), ObjectReference.fromObject(value), offset.toWord(), Word.fromIntZeroExtend(locationMetadata), INSTANCE_FIELD);
+     } else if (VM.VerifyAssertions)
+       VM._assert(VM.NOT_REACHED);
+   }
+ 
++  /* write barrier implementation
++   * Junjie Qian
++   */
++  @NoInline
++  private static void dowritebarrier(int objectsize, ObjectReference src, Offset offset) {
++//          VM.sysWrite(System.currentTimeMillis());
++//          VM.sysWrite(1);
++//          VM.sysWriteln(src);
++//          VM.writesyswriteln(src);
++          VM.barriersyswriteln(1, objectsize, src, offset);
++  }
++
+   /**
+    * Barrier for writes of objects into arrays (i.e. aastore).
+    *
+@@ -1264,12 +1284,30 @@
+   public static Object objectFieldRead(Object ref, Offset offset, int locationMetadata) {
+     if (NEEDS_OBJECT_GC_READ_BARRIER) {
+       ObjectReference src = ObjectReference.fromObject(ref);
++
++      // Junjie Qian
++      int size = org.jikesrvm.mm.mmtk.ObjectModel.getObjectSize(src);
++      doreadbarrier(size, src, offset);
++
+       return Selected.Mutator.get().objectReferenceRead(src, src.toAddress().plus(offset), offset.toWord(), Word.fromIntZeroExtend(locationMetadata), INSTANCE_FIELD).toObject();
+     } else if (VM.VerifyAssertions)
+       VM._assert(VM.NOT_REACHED);
+     return null;
+   }
+ 
++  /* read barrier implementation
++   * Junjie Qian
++   */
++  @NoInline
++  private static void doreadbarrier(int objectsize, ObjectReference src, Offset offset) {
++//          VM.sysWrite(System.currentTimeMillis());
++//          VM.sysWrite(0);
++//          VM.sysWriteln(src);
++//          VM.readsyswriteln(src);
++          VM.barriersyswriteln(0, objectsize, src,offset);
++  }
++
++
+   /**
+    * Barrier for loads of objects from fields of arrays (i.e. aaload).
+    *
+diff -Naur jikesrvm-3.1.3/rvm/src/org/jikesrvm/VM.java jikesrvm-3.1.3-barriers/rvm/src/org/jikesrvm/VM.java
+--- jikesrvm-3.1.3/rvm/src/org/jikesrvm/VM.java	2013-02-12 12:28:47.000000000 -0600
++++ jikesrvm-3.1.3-barriers/rvm/src/org/jikesrvm/VM.java	2013-04-16 11:09:03.649499966 -0500
+@@ -1210,6 +1210,35 @@
+     swUnlock();
+   }
+ 
++  /* read barrier implementation write operation
++   * Junjie Qian
++   */
++  @NoInline
++  public static void barriersyswriteln(int n, int objectsize, ObjectReference o, Offset offset) {
++    swLock();
++    write(System.currentTimeMillis());
++    write(objectsize);
++    write(n);
++    write(o);
++    write(offset);
++    writeln();
++    swUnlock();
++  } 
++
++
++  /* write barrier implementation write operation
++   * Junjie Qian
++   
++  @NoInline
++  public static void writesyswriteln(ObjectReference o) {
++    swLock();
++    write(System.currentTimeMillis());
++    write(1);
++    write(o);
++    writeln();
++    swUnlock();
++  } */
++
+   @NoInline
+   public static void sysWriteln(ObjectReference o) {
+     swLock();
