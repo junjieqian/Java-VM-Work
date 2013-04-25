@@ -1,0 +1,15 @@
+README
+
+This is the final version of trace analyzation tools in JVM objects research project.
+
+The input trace format is as: 1361422111014 (0x0000013cfb14d126)24000x620191d40x00000040.
+
+Including files:
+	format_trace.py, reorganize the trace information
+	trace_format_removedeplicate.py, to remove the repeatedly access, such as one continuous access "A A A" will be considerred as "A"
+	address-divide-intersize.py, to save the execution time, the trace is analyzed based on different address range
+	collect-results.py, combine all the results produced by different address ranges
+	benchmark.slurm, submitting the job to the cluster using SLURM (hcc.unl.edu, sandhills)
+	benchmark.sh, submitting the job to the cluster using PBS (hcc.unl.edu, tusker)
+
+	3d-plotting.py, plot the 3D access figure
