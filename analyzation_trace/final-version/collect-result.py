@@ -12,6 +12,7 @@ script, dirname, resultname = argv
 ################ fetech the inter sizes in the sub files
 interlist = []
 tmplist = []
+addrlist = []
 for root, dirs, files in os.walk(dirname):
 	for f in files:
 		print dirname+'/'+f
@@ -27,15 +28,32 @@ for root, dirs, files in os.walk(dirname):
 					temp = string.split(word[count], ']')
 					tmplist.append(int(temp[0]))
 					interlist.append(tmplist)
+#			elif line.find(':') == 0:
+#				pass
+			else:
+				try:
+					word = string.split(line, '\n')
+					addrlist.append(int(word[0]))
+				except:
+					pass
 
 
 ####### store the inter sizes to the resultfile
 try:
-	resultfile = open(resultname, 'w+')
+	resultfile = open((resultname+%s)%(intersize), 'w+')
 	for item in interlist:
 		print >> resultfile, item
-		print item
+#		print item
 	resultfile.close()
+except:
+	print "no result filename provided"
+
+try:
+	resultfile2 = open((resultname+%s)%(address), 'w+')
+	for item in addrlist:
+		print >> resultfile2, item
+#		print item
+	resultfile2.close()
 except:
 	print "no result filename provided"
 
