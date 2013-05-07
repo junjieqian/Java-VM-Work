@@ -9,11 +9,11 @@ from sys import argv
 import matplotlib.pyplot as plt
 import numpy as np
 
-script, sourcename, resultname = argv
+script, sourceintersizename, sourceaddrname, resultname = argv
 
 interlist = []
 tmplist = []
-fp = open(sourcename, 'r')
+fp = open((sourceintersizename), 'r')
 for line in fp:
   if line.find('[') == 0:
     tmplist = []
@@ -28,20 +28,39 @@ for line in fp:
       interlist.append(tmplist)
 
 fp.close()
+
+####################### Including is the information of the address in the address file
+######################  it is supposed to have the same index as the inter size information
+fa = open(sourceaddrname, 'r')
+addrlist = []
+for line2 in fa:
+  word = string.split(line2, '\n')
+  addrlist.append(word[0])
+
+fa.close()
+#################
+
+
+
 m = len(interlist)
+print m, len(addrlist)
 x = []   # range of inter list at each access
 # be care if no intersize for one access, that would not be count
 # e.g. [1,2] and [1,2,3], the third one would be only one
 tmpx = []   # to store the nth element of each inter size list
 size = 0
 
-for i in range(0, 200):
+badaddrlist = []
+for i in range(0, 80):
   tmpx = []
   x.append([])
   for j in range(0, m):
     try:
       size = interlist[j][i]
       tmpx.append(size)
+      if (int(size)>=8388608):
+        badaddrlist.append(addrlist[j])
+        print addrlist[j]
     except:
       pass
   x[i] += tmpx
@@ -81,8 +100,10 @@ for i in range (0, len(x)):
         size2 += 1
       elif (x[i][j]>=262144) and (x[i][j]<8388608):
         size3 += 1
+#        badaddrlist.append(addrlist[i])
       else:
         size4 += 1
+#        badaddrlist.append(addrlist[i])
 #    print total, size1, size3, float(float(size2)/float(total)), float(size3/total), float(size4/total)
     nums1.append(float(float(size1)/float(total)))
     nums2.append(float(float(size2)/float(total)))
@@ -90,6 +111,7 @@ for i in range (0, len(x)):
     nums4.append(float(float(size4)/float(total)))
     numstotal.append(totalsize)
     numsmean.append(float(totalsize/len(x[i])))
+#    print total
 
 ind = np.arange(len(nums1))
 
@@ -111,12 +133,18 @@ p4 = plt.bar(ind, nums4, bottom= b, color = 'b')
 
 plt.ylabel('distributions of different intersizes')
 plt.xlabel('indexes of accesses')
-plt.title('inter sizes distributions of different accesses')
+plt.title('inter sizes distributions of different accesses, %s'%(resultname))
 #plt.xticks(ind, np.arange(0,1000,100))
 #plt.legend(loc = 'upper center', ncol =3, fancybox = True, shadow=True, (p1[0], p2[0], p3[0], p4[0]), ('<32k', '32k-256k', '256k-8m', '>8m'))
 plt.legend((p1[0], p2[0], p3[0], p4[0]), ('<32k', '32k-256k', '256k-8m', '>8m'), loc = 'upper center', ncol =4, fancybox = True, shadow=True)
 plt.savefig(resultname)
 
+
+fd = open((resultname+'-badaddr'), 'w+')
+badaddrlist = list(set(badaddrlist))
+for item in badaddrlist:
+  print >> fd, item
+fd.close()
 
 #plt.boxplot(x,0,'')
 #plt.xlabel('index of access')

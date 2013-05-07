@@ -28,6 +28,8 @@ for root, dirs, files in os.walk(dirname):
 					temp = string.split(word[count], ']')
 					tmplist.append(int(temp[0]))
 					interlist.append(tmplist)
+				else:
+					interlist.append([int(0)])
 #			elif line.find(':') == 0:
 #				pass
 			else:
@@ -37,10 +39,30 @@ for root, dirs, files in os.walk(dirname):
 				except:
 					pass
 
+print len(interlist), len(addrlist)
+
+todellist = []
+for i in range(0, len(interlist)):
+	try:
+		if (len(interlist[i]) == 1):
+		todellist.append(i)
+	except:
+		print i, interlist[i]
+  
+j = 0
+for i in todellist:
+	del interlist[i-j]
+	del addrlist[i-j]
+	j += 1
+  
+print len(interlist), len(addrlist)
+
+print len(interlist), len(addrlist)
+
 
 ####### store the inter sizes to the resultfile
 try:
-	resultfile = open((resultname+%s)%(intersize), 'w+')
+	resultfile = open((resultname+'intersize'), 'w+')
 	for item in interlist:
 		print >> resultfile, item
 #		print item
@@ -49,7 +71,7 @@ except:
 	print "no result filename provided"
 
 try:
-	resultfile2 = open((resultname+%s)%(address), 'w+')
+	resultfile2 = open((resultname+'address'), 'w+')
 	for item in addrlist:
 		print >> resultfile2, item
 #		print item
