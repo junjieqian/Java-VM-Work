@@ -61,7 +61,7 @@ for i in range(0, 200):
         badaddrindex = -1
         badaddrtmp = 0
         if bigaddrlist[j] in badaddrlist:
-          indices = [mmm for mmm, nnn in enumerate(badaddrlist) if nnn = bigaddrlist[j]]
+          indices = [mmm for mmm, nnn in enumerate(badaddrlist) if nnn == bigaddrlist[j]]
           badaddrindex = indices[-1]
           badaddrtmp = int(badaddrindexlist[badaddrindex])
           badaddrlist.append(bigaddrlist[j])
@@ -97,7 +97,7 @@ print 'bad addr list and index got!'
 fc = open(tracefile, 'r')
 i = 0
 timelist = []
-acceslist = []
+accesslist = []
 addrindex = -1
 for line3 in fc:
   word = string.split(line3, ' ')
@@ -139,7 +139,7 @@ for i in range(0, timelength):
     periodtime = 0
     print i
   else:
-    periodaccess += 1
+    periodaccess += accesslist[i]
     periodtime += 1
 newaccesslist.append(periodaccess)
 newtimelist.append(i)
