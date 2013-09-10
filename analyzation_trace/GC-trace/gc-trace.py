@@ -24,8 +24,12 @@ def readin(tracename):
 	sizedict 		= {}   	# used to store last occur max size
 	indexdict 		= {}  	# used to store the index in list
 	templist 		= []	# used to store addr list during each GC
+	biglist 		= []    # used to store the big inter arrival size occurence
+	maturelist 		= []    # used to store the mature objects # in each GC
 	maxaddr 		= 0
 	idx 			= 0
+	mature 			= 0
+	big 			= 0
 
 	for line in fp:
 		rw=1
@@ -33,11 +37,15 @@ def readin(tracename):
 			maxaddr			= 0
 			addrlist.append(templist)
 			intersizelist.append(tempsizelist)
+			biglist.append(big)
+			maturelist.append(mature)
 			tempsizelist	= []
 			templist 		= []
 			sizedict		= {}
 			indexdict		= {}
-			idx=0
+			idx 			= 0
+			big 			= 0
+			mature 			= 0
 
 		else:
 			try:
@@ -46,22 +54,27 @@ def readin(tracename):
 					rw=-1
 			#	addr=int(word[0])*rw
 				templist.append(addr)
-				if (abs(addr)>maxaddr) and (abs(addr)>=0xa4c00000) and (abs(addr)<=0xafffffff):  # update the max addr in heap
+				if (abs(addr)>maxaddr) and (abs(addr)>=int(0xa4c00000,0)) and (abs(addr)<=int(0xafffffff, 0)):  # update the max addr in heap
 					maxaddr 		= abs(addr)
 				# if it happens once, record the passed memory size
 				# update the sizedict
-				if addr in sizedict:
-					lastmaxaddr 	= sizedict[addr]
-					sizedict[addr] 	= maxaddr
-					index 			= indexdict[addr]
-					tempsizelist[index].append(maxaddr-lastmaxaddr)
-				else:
-					print addr
-					sizedict[addr] 	= maxaddr
-					idx 			+= 1;
-					templist.append(addr)
-					tempsizelist.append([0])
-					indexdict[addr] = idx
+				templist.append(addr)
+				if (abs(addr)>=int(0xa4c00000, 0)) and (abs(addr)<=int(0xafffffff, 0)):
+					if addr in sizedict:
+						lastmaxaddr 	= sizedict[addr]
+						sizedict[addr] 	= maxaddr
+						index 			= indexdict[addr]
+						tempsizelist[index].append(maxaddr-lastmaxaddr)
+						if (maxaddr-lastmaxaddr)>=8388608:
+							big 		+= 1
+					else:
+						print addr
+						sizedict[addr] 	= maxaddr
+						idx 			+= 1;
+						tempsizelist.append([0])
+						indexdict[addr] = idx
+				else if (abs(addr)>int(0x6fffffff, 0)):
+					mature += 1
 
 			except:
 				pass
@@ -92,9 +105,8 @@ def main():
 	addrlist 				  = []
 	intersizelist 			  = []
 	(addrlist, intersizelist) = readin(tracename);
-	for i in addrlist:
-		print i
 	plot(addrlist, resultname)
+	print biglist, maturelist
 
 if __name__ == '__main__':
 	main()
