@@ -1,0 +1,275 @@
+diff -r ./jikesrvm-3.1.0-trace/.ant.properties /home/jqian/projects/tools/JikesRVM/jikesrvm-3.1.0/.ant.properties
+8d7
+< #config.name=FastAdaptiveGenImmix
+Only in /home/jqian/projects/tools/JikesRVM/jikesrvm-3.1.0/dist: working
+Only in /home/jqian/projects/tools/JikesRVM/jikesrvm-3.1.0: generated
+diff -r ./jikesrvm-3.1.0-trace/MMTk/src/org/mmtk/plan/generational/Gen.java /home/jqian/projects/tools/JikesRVM/jikesrvm-3.1.0/MMTk/src/org/mmtk/plan/generational/Gen.java
+355c355
+<   public static boolean inNursery(Address addr) {
+---
+>   static boolean inNursery(Address addr) {
+369c369
+<   public static boolean inNursery(ObjectReference obj) {
+---
+>   static boolean inNursery(ObjectReference obj) {
+Only in ./jikesrvm-3.1.0-trace/: README
+diff -r ./jikesrvm-3.1.0-trace/rvm/src/org/jikesrvm/compilers/opt/hir2lir/ExpandRuntimeServices.java /home/jqian/projects/tools/JikesRVM/jikesrvm-3.1.0/rvm/src/org/jikesrvm/compilers/opt/hir2lir/ExpandRuntimeServices.java
+38,39d37
+< import org.jikesrvm.classloader.Atom;
+< import org.jikesrvm.classloader.NormalMethod;
+142,164d139
+<     if (ALoad.conforms(inst)) {
+<        LocationOperand loc = ALoad.getLocation(inst);
+<        int bytelength = loc.getElementType().getArrayTypeForElementType().getMemoryBytes();
+<        RVMMethod barrierTarget = Entrypoints.arrayAccessBarrierMethod;
+<        Instruction barrier = Call.create4(CALL, null, IRTools.AC(barrierTarget.getOffset()), MethodOperand.STATIC(barrierTarget), ALoad.getClearGuard(inst),
+<                              ALoad.getArray(inst).copy(), ALoad.getIndex(inst).copy(), IRTools.IC(bytelength), IRTools.IC(0));
+<        if (barrierApplicable(ir.method)) {
+<                   insert (barrier, inst, ir, true);
+<        }
+<      }  else if (AStore.conforms(inst)) {
+<         LocationOperand loc = AStore.getLocation(inst);
+<         int bytelength = loc.getElementType().getArrayTypeForElementType().getMemoryBytes();
+<         RVMMethod barrierTarget = Entrypoints.arrayAccessBarrierMethod;
+<         Instruction barrier = Call.create4(CALL,null, IRTools.AC(barrierTarget.getOffset()), MethodOperand.STATIC(barrierTarget), AStore.getClearGuard(inst),
+<                               AStore.getArray(inst).copy(), AStore.getIndex(inst).copy(), IRTools.IC(bytelength), IRTools.IC(1));
+<         if(barrierApplicable(ir.method)) {
+<                   insert(barrier, inst, ir, true);
+<         }
+<      }
+<       
+< 
+< 
+443,453d417
+<           LocationOperand loc = PutField.getLocation(inst);
+<           FieldReference fieldRef = loc.getFieldRef();
+<           
+<           RVMMethod target = Entrypoints.fieldAccessBarrierMethod;
+<           Instruction barrier = Call.create3(CALL,null, IRTools.AC(target.getOffset()), MethodOperand.STATIC(target), PutField.getClearGuard(inst),
+<         		  PutField.getRef(inst).copy(), PutField.getOffset(inst), IRTools.IC(1));
+<           if(barrierApplicable(ir.method)) {
+<         	  insert(barrier, inst, ir, true);
+<           }
+< 
+455,456c419,420
+< //            LocationOperand loc = PutField.getLocation(inst);
+< //            FieldReference fieldRef = loc.getFieldRef();
+---
+>             LocationOperand loc = PutField.getLocation(inst);
+>             FieldReference fieldRef = loc.getFieldRef();
+460,462c424,425
+< //                RVMMethod target = Entrypoints.putfieldWriteBarrierMethod;
+<                   target = Entrypoints.putfieldWriteBarrierMethod;
+<                   Instruction wb =
+---
+>                 RVMMethod target = Entrypoints.putfieldWriteBarrierMethod;
+>                 Instruction wb =
+486c449
+< //          if (MemoryManagerConstants.NEEDS_READ_BARRIER) {
+---
+>           if (MemoryManagerConstants.NEEDS_READ_BARRIER) {
+489,501d451
+< 
+<             RVMMethod target = Entrypoints.fieldAccessBarrierMethod;
+<             Instruction barrier = Call.create3(CALL,null, IRTools.AC(target.getOffset()), MethodOperand.STATIC(target), GetField.getClearGuard(inst),
+<           		  GetField.getRef(inst).copy(), GetField.getOffset(inst), IRTools.IC(0));
+<             if(barrierApplicable(ir.method)) {
+<           	  insert(barrier, inst, ir, true);
+<             }
+<             
+<           if (MemoryManagerConstants.NEEDS_READ_BARRIER) {
+<             loc = GetField.getLocation(inst);
+<             fieldRef = loc.getFieldRef();
+< 
+505,506c455
+< //                RVMMethod target = Entrypoints.getfieldReadBarrierMethod;
+<                 target = Entrypoints.getfieldReadBarrierMethod;
+---
+>                 RVMMethod target = Entrypoints.getfieldReadBarrierMethod;
+528,531c477
+< //          if (MemoryManagerConstants.NEEDS_PUTSTATIC_WRITE_BARRIER) {
+< //            LocationOperand loc = PutStatic.getLocation(inst);
+< 
+---
+>           if (MemoryManagerConstants.NEEDS_PUTSTATIC_WRITE_BARRIER) {
+534,545d479
+<             RVMMethod target = Entrypoints.staticFiledAccessBarrierMethod;
+<             Instruction barrier = Call.create2(CALL, null, IRTools.AC(target.getOffset()), MethodOperand.STATIC(target), 
+<             		PutStatic.getOffset(inst), IRTools.IC(1));
+<             if(barrierApplicable(ir.method)) {
+<           	  insert(barrier, inst, ir, true);
+<             }
+<             
+<         	if (MemoryManagerConstants.NEEDS_PUTSTATIC_WRITE_BARRIER) {
+<             loc = PutStatic.getLocation(inst);
+<             field = loc.getFieldRef();
+< 
+<        //     FieldReference field = loc.getFieldRef();
+547,548c481
+< //              RVMMethod target = Entrypoints.putstaticWriteBarrierMethod;
+<               target = Entrypoints.putstaticWriteBarrierMethod;
+---
+>               RVMMethod target = Entrypoints.putstaticWriteBarrierMethod;
+570,571c503
+< 
+---
+>           if (MemoryManagerConstants.NEEDS_GETSTATIC_READ_BARRIER) {
+574,590c506,507
+<             RVMMethod target = Entrypoints.staticFiledAccessBarrierMethod;
+<             Instruction barrier = Call.create2(CALL, null, IRTools.AC(target.getOffset()), MethodOperand.STATIC(target), 
+<             		GetStatic.getOffset(inst), IRTools.IC(0));
+<             if(!field.getDescriptor().isRVMDescriptor()) {
+<           	  insert(barrier, inst, ir, true);
+<             }
+< 
+<           if (MemoryManagerConstants.NEEDS_GETSTATIC_READ_BARRIER) {
+< //            LocationOperand loc = GetStatic.getLocation(inst);
+< //            FieldReference field = loc.getFieldRef();
+< //            if (!field.getFieldContentsType().isPrimitiveType()) {
+< //              RVMMethod target = Entrypoints.getstaticReadBarrierMethod;
+<             loc = GetStatic.getLocation(inst);
+<             field = loc.getFieldRef();
+<             if (barrierApplicable(ir.method)) {
+<               target = Entrypoints.getstaticReadBarrierMethod;
+< 
+---
+>             if (!field.getFieldContentsType().isPrimitiveType()) {
+>               RVMMethod target = Entrypoints.getstaticReadBarrierMethod;
+660,697d576
+<   // insert and possibly inline a barrier method 
+<   private void insert(Instruction barrier, Instruction inst, IR ir, boolean before) {
+<     if (VM.VerifyAssertions) {
+<       RVMMethod target = Call.getMethod(barrier).getTarget();
+<       int numParams = target.getParameterTypes().length;
+<       if (Call.getNumberOfParams(barrier) != numParams) {
+<         System.out.println(barrier);
+<         System.out.println(inst);
+<         VM.sysFail("Bad match");
+<       }
+<     }
+<     
+<     barrier.bcIndex = RUNTIME_SERVICES_BCI;
+<     barrier.position = inst.position;
+<     if (before) {
+<       inst.insertBefore(barrier);
+<     } else {
+<       inst.insertAfter(barrier);
+<       // don't need to change next
+<     }
+<   }
+<   
+<   private  final boolean barrierApplicable(NormalMethod method) {
+< 	    // for now, just put instrumentation in the application (not the libraries)
+<     Atom desc = method.getDeclaringClass().getDescriptor();
+< 	    // handle weird L$Proxy2; classes
+< 	    //if (VM.VerifyAssertions) { VM._assert(desc.getBytes()[1] != '$'); }
+< 	    if (desc.getBytes()[1] != '$') {
+< 	      boolean app = !desc.isRVMDescriptor();
+< 	      if (app && VM.runningVM && VM.fullyBooted) {
+< 	        return true;
+< 	      }
+< 	    }
+< 	    return false;
+< 	  }
+< 
+< 
+diff -r ./jikesrvm-3.1.0-trace/rvm/src/org/jikesrvm/mm/mminterface/MemoryManager.java /home/jqian/projects/tools/JikesRVM/jikesrvm-3.1.0/rvm/src/org/jikesrvm/mm/mminterface/MemoryManager.java
+43d42
+< import org.mmtk.plan.generational.Gen;
+382,458d380
+< 
+<   @Inline
+<   @Entrypoint
+<   /**
+<    * isRead 0:read, 1:write;
+<    */
+<   public static void fieldAccessBarrier(Object ref, Offset offset, int isRead){
+< //	  int tid = (int)Thread.currentThread().getId();
+<       Address addr = ObjectReference.fromObject(ref).toAddress().plus(offset);
+<       VM.sysWriteHex(addr);
+<       // check whether the addr is in nursery
+<       if(Gen.inNursery(ObjectReference.fromObject(ref).toAddress())){
+<               VM.sysWrite("     N          ");
+<       }else{
+<               VM.sysWrite("     M          ");
+<       }
+< 
+<       if(isRead == 0){
+<               VM.sysWrite("      R         ");
+<       }else{
+<               VM.sysWrite("      W         ");
+<       }
+< //      VM.sysWrite(tid);
+<       VM.sysWriteln();  
+<   }
+<   
+<   @Inline
+<   @Entrypoint
+<   /**
+<    * isRead 0:read, 1:write;
+<    */
+<   public static void staticFieldAccessBarrier(Offset offset, int isRead){
+< //	  int tid = (int)Thread.currentThread().getId();
+<       Address addr = Magic.getJTOC().plus(offset);
+<       VM.writeHex(addr);
+<       // check whether the addr is in nursery
+<       if(Gen.inNursery(addr)){
+<               VM.sysWrite("     N          ");
+<       }else{
+<               VM.sysWrite("     M          ");
+<       }
+< 
+<       if(isRead == 0){
+<               VM.sysWrite("      R         ");
+<       }else{
+<               VM.sysWrite("      W         ");
+<       }
+< //      VM.sysWrite(tid);
+<       VM.sysWriteln();  
+<   }
+< 
+<   @Inline
+<   @Entrypoint
+<   /**
+<    * isRead 0:read, 1:write;
+<    */
+<   public static void arrayAccessBarrier(Object ref, int index, int byteSize, int isRead){
+< //	  int tid = (int)Thread.currentThread().getId();
+< 	  Address addr = ObjectReference.fromObject(ref).toAddress().plus(index*byteSize);
+< 	  VM.sysWriteHex(addr);
+<       // check whether the addr is in nursery
+<       if(Gen.inNursery(addr)){
+<               VM.sysWrite("     N          ");
+<       }else{
+<               VM.sysWrite("     M          ");
+<       }
+< 
+<       if(isRead == 0){
+<               VM.sysWrite("      R         ");
+<       }else{
+<               VM.sysWrite("      W         ");
+<       }
+< //      VM.sysWrite(tid);
+<       VM.sysWriteln();  
+<   }
+< 
+diff -r ./jikesrvm-3.1.0-trace/rvm/src/org/jikesrvm/runtime/Entrypoints.java /home/jqian/projects/tools/JikesRVM/jikesrvm-3.1.0/rvm/src/org/jikesrvm/runtime/Entrypoints.java
+284,291d283
+<   public static final NormalMethod fieldAccessBarrierMethod =
+< 	  getMethod(org.jikesrvm.mm.mminterface.MemoryManager.class, "fieldAccessBarrier","(Ljava/lang/Object;Lorg/vmmagic/unboxed/Offset;I)V");
+<   public static final NormalMethod staticFiledAccessBarrierMethod =
+< 	  getMethod(org.jikesrvm.mm.mminterface.MemoryManager.class, "staticFieldAccessBarrier","(Lorg/vmmagic/unboxed/Offset;I)V");
+<   public static final NormalMethod arrayAccessBarrierMethod = 
+< 	  getMethod(org.jikesrvm.mm.mminterface.MemoryManager.class, "arrayAccessBarrier","(Ljava/lang/Object;III)V");
+<  
+Only in /home/jqian/projects/tools/JikesRVM/jikesrvm-3.1.0: target
+diff -r ./jikesrvm-3.1.0-trace/tools/bootImageWriter/src/org/jikesrvm/tools/bootImageWriter/BootImageWriter.java /home/jqian/projects/tools/JikesRVM/jikesrvm-3.1.0/tools/bootImageWriter/src/org/jikesrvm/tools/bootImageWriter/BootImageWriter.java
+1141d1140
+<       if (a == null && b == null) return 0;
+1148,1149d1146
+<         DemographicInformation infoB = demographicData.get(typeB);
+<         if (infoA == null && infoB == null) return 0;
+1151c1148
+<        /* DemographicInformation infoB = demographicData.get(typeB);*/
+---
+>         DemographicInformation infoB = demographicData.get(typeB);
