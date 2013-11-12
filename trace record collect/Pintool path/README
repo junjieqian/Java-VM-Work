@@ -1,0 +1,4 @@
+This is built on Pintool 2.13-61206 (http://software.intel.com/en-us/articles/pin-a-dynamic-binary-instrumentation-tool) sample code, "pinatrace.cpp"
+
+Patch is to insert the time stamp to the memory trace, while time stamp is in milliseconds and the starting time is 0. Due to the library, it is not really milliseconds but every 10 milliseconds.
+Reason to do this, Pin capture the Java VM memory accesses, divide the trace into several parts with the garbage collection log time.
