@@ -1,4 +1,4 @@
-jvmobjects
+JVM Objects
 ==========
 
 Bloat memory usage of Java VM objects caused inefficient memory usage. This project is to explore how this comes and propose one solution for this.
