@@ -1,0 +1,3 @@
+Cache simulator: dineroIV (http://pages.cs.wisc.edu/~markhill/DineroIV/)
+
+Patch is to generate the cache miss for each trace record, which can identify which part of the memory accesses is bad locality.
