@@ -13,6 +13,10 @@ from numpy import binary_repr
 
 def inst_trans(instruction):
     ''' translate the instructions
+    @param ins_binary, binary presentation of the instructions
+    @param ins_opcode, operation code of the instructions
+    @param ins_function, function of the instructions
+    @param ins, the instruction going to present later
     '''
     inst_dicts()
     try:
