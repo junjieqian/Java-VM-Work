@@ -17,9 +17,9 @@ def main():
     firstline = fp.readline()
     fp.close()
     if int(firstline.split('\n')[0], 0) > 414086872:
-        second_gc_log(filename, gclog, cachefile, fullcachein)
+        second_gc_log.second_gc_log(filename, gclog, cachefile, fullcachein)
     else:
-        millisecond_gc_log(filename, gclog, cachefile, fullcachein)
+        millisecond_gc_log.millisecond_gc_log(filename, gclog, cachefile, fullcachein)
 
 if __name__=='__main__':
     main()

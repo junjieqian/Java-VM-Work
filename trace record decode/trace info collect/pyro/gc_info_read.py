@@ -13,7 +13,7 @@ def gc_read(filename):
     for line in fp:
         if line.find('GC') >= 0:
             word = line.split(': ')
-            time_list.append(str(float(word[0]))
+            time_list.append(str(float(word[0])))
     fp.close()
     return time_list
 
