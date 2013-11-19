@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+# logs gc efficiecny process
+
+import string
+import sys
+import os
+import numpy as np
+
+def log_file_process(filename):
+	''' log_file_process function, to collect GC efficiency
+	@param size_list, the average size change for each GC
+	@param time_list, the time used for each GC
+	@param before, the memory size before GC happens
+	@param after, the memory size after GC happens
+	@param time, the time spent for the GC
+	@param gc_size_list, the size change for GC during on run
+	'''
+	fp = open(filename, 'r')
+	size_list = []
+	time_list = []
+	gc_size_list = []
+	gc_time_list = []
+	for line in fp:
+		if line.find("GC") >= 0:
+			word = line.split(' ')
+			before = int(word[5].split("KB")[0])
+			after = int(word[7].split("KB")[0])
+			time = word[8]
+			gc_time_list.append(time)
+			gc_size_list.append(before-after)
+		elif line.find("%%%%%%%%%%%%") >= 0:
+			size_list.append(np.mean(gc_size_list))
+			time_list.append(np.mean(gc_time_list))
+			del gc_time_list[:]
+			del gc_size_list[:]
+	return (size_list, time_list)
+
+def log_path_process(filepath):
+	''' log_path_process function, to collect GC efficiency for one directories
+	@param fnames, the log names with path
+	@param size_list, the average size change for each GC
+	@param time_list, the time used for each GC
+	'''
+	time_list = []
+	size_list = []
+	for root, files in os.walk(filepath):
+		fnames = [os.path.join(root, f) for f in files]
+		for filename in fnames:
+			(size_list, time_list) = log_file_process(filename)
+			size
