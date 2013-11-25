@@ -64,10 +64,14 @@ def log_path_process(filepath):
 	misses_mu = []
 	misses_gc = []
 	time = []
-	for root, files in os.walk(filepath):
+	for root, dirs, files in os.walk(filepath):
 		fnames = [os.path.join(root, f) for f in files]
 		for filename in fnames:
 			(gc, time_mu, time_gc, major_gc, cycles_mu, cycles_gc, \
 				instructions_mu, instructions_gc, misses_mu, misses_gc) \
 			= log_file_process(filename)
-			
+			resultname = os.path.join(filename, "_result")
+			gc = write_to_file.writetofile(gc, resultname)
+			time_mu = write_to_file.writetofile(time_mu, resultname)
+			time_gc = write_to_file.writetofile(time_gc, resultname)
+			major_gc = write_to_file.writetofile(major_gc, resultname)

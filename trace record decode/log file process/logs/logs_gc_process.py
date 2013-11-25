@@ -5,6 +5,7 @@ import string
 import sys
 import os
 import numpy as np
+import write_to_file
 
 def log_file_process(filename):
 	''' log_file_process function, to collect GC efficiency
@@ -21,11 +22,15 @@ def log_file_process(filename):
 	gc_size_list = []
 	gc_time_list = []
 	for line in fp:
-		if line.find("GC") >= 0:
-			word = line.split(' ')
-			before = int(word[5].split("KB")[0])
-			after = int(word[7].split("KB")[0])
-			time = word[8]
+		if line.find("[GC") >= 0:
+			word = line.split("->")
+			before = int((word[0].split('  '))[1].split('KB')[0])
+			after = int((word[1].split("KB"))[0])
+			time = float(word[1].split(' ')[-2])
+			# word = line.split(' ')
+			# before = int(word[5].split("KB")[0])
+			# after = int(word[7].split("KB")[0])
+			# time = word[8]
 			gc_time_list.append(time)
 			gc_size_list.append(before-after)
 		elif line.find("%%%%%%%%%%%%") >= 0:
@@ -43,8 +48,10 @@ def log_path_process(filepath):
 	'''
 	time_list = []
 	size_list = []
-	for root, files in os.walk(filepath):
+	for root, dirs, files in os.walk(filepath):
 		fnames = [os.path.join(root, f) for f in files]
 		for filename in fnames:
 			(size_list, time_list) = log_file_process(filename)
-			size
+			resultname = filename + "_result"
+			size_list = write_to_file.writetofile(size_list, resultname)
+			time_list = write_to_file.writetofile(time_list, resultname)
